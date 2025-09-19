@@ -9,18 +9,18 @@ from tqdm import tqdm
 from dotenv import load_dotenv
 from concurrent.futures import ProcessPoolExecutor
 
-# === KONFIGURACJA ===
+# === CONFIGURATION ===
 load_dotenv()
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # wyciszenie logów TensorFlow
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # suppress TensorFlow logs
 base_dir = os.getenv("BASE_DIR")
 output_csv = os.getenv("OUTPUT_CSV")
 log_file = os.getenv("WARNING_TXT")
 target_len = 90
-random_add = 1  # liczba wariantów
-max_shift = 10  # maksymalne przesunięcie w pikselach
+random_add = 1  # number of augmented variants
+max_shift = 10  # maximum pixel shift
 show_preview = False
 
-# === LANDMARKI ===
+# === LANDMARKS ===
 LANDMARKS_INFO = {
     0: "nose",
     11: "left_shoulder", 12: "right_shoulder",
@@ -32,7 +32,7 @@ LANDMARKS_INFO = {
 }
 SELECTED_LANDMARKS = list(LANDMARKS_INFO.keys())
 
-# === FUNKCJE ===
+# === FUNCTIONS ===
 def resample_sequence(sequence: np.ndarray, target_len: int = 60) -> np.ndarray:
     if sequence.shape[0] == 0:
         return np.zeros((target_len, len(SELECTED_LANDMARKS) * 2))
@@ -50,28 +50,28 @@ def process_video(video_file, label, video_id):
 
     cap = cv2.VideoCapture(video_file)
     if not cap.isOpened():
-        print("Nie można otworzyć:", video_file)
+        print("Cannot open:", video_file)
         return []
 
     sequence = []
     frame_width, frame_height = None, None
-    rotate_code = None  # do pionowego wideo
-    flip_180 = False    # jeśli wideo jest do góry nogami
+    rotate_code = None  # for vertical video
+    flip_180 = False    # if video is upside down
 
-    first_landmarks_checked = False  # aby sprawdzić odwrócenie tylko raz
+    first_landmarks_checked = False  # check upside-down only once
 
     while True:
         ret, frame = cap.read()
         if not ret:
             break
 
-        # Wykrycie orientacji po wymiarach pierwszej klatki
+        # Detect orientation based on first frame dimensions
         if frame_width is None:
             h, w = frame.shape[:2]
             frame_height, frame_width = h, w
             if h < w:
                 rotate_code = cv2.ROTATE_90_CLOCKWISE
-                frame_width, frame_height = h, w  # swap po rotacji
+                frame_width, frame_height = h, w  # swap after rotation
 
         if rotate_code is not None:
             frame = cv2.rotate(frame, rotate_code)
@@ -82,7 +82,7 @@ def process_video(video_file, label, video_id):
         if results.pose_landmarks:
             landmarks = results.pose_landmarks.landmark
 
-            # Sprawdzenie, czy wideo jest odwrócone (stopami do góry)
+            # Check if video is upside down (feet at top)
             if not first_landmarks_checked:
                 left_foot_y = landmarks[27].y
                 right_foot_y = landmarks[28].y
@@ -98,11 +98,11 @@ def process_video(video_file, label, video_id):
             frame_data = []
 
             warning_lines = []
-            problem_nogi_count = 0
-            problem_barki_count = 0
-            check_frames = 5  # liczba pierwszych klatek do sprawdzenia
+            problem_legs_count = 0
+            problem_shoulders_count = 0
+            check_frames = 5  # number of first frames to check
 
-            # w pętli po klatkach
+            # Check first 'check_frames' frames
             if len(sequence) < check_frames:
                 required_landmarks = [11, 12, 25, 26, 27, 28]
 
@@ -116,29 +116,28 @@ def process_video(video_file, label, video_id):
                     left_shoulder_x = landmarks[11].x * frame_width
                     right_shoulder_x = landmarks[12].x * frame_width
 
-                    # sprawdzenie nóg (obie nogi muszą być wyżej niż barki)
+                    # Check legs (both legs must be below shoulders)
                     if ((left_knee_y < left_shoulder_y and right_knee_y < right_shoulder_y) or
                         (left_ankle_y < left_shoulder_y and right_ankle_y < right_shoulder_y)):
-                        problem_nogi_count += 1
+                        problem_legs_count += 1
 
-                    # sprawdzenie barków
+                    # Check shoulders
                     if right_shoulder_x <= left_shoulder_x:
-                        problem_barki_count += 1
+                        problem_shoulders_count += 1
 
-            # po sprawdzeniu pierwszych 'check_frames' klatek generujemy ostrzeżenie
+            # After checking first 'check_frames' frames, generate warning
             if len(sequence) == check_frames:
-                if problem_nogi_count == check_frames:
-                    line = f"Ostrzeżenie: wszystkie pierwsze {check_frames} klatki mają dziwne ułożenie nóg w wideo {video_id} -> {video_file}"
+                if problem_legs_count == check_frames:
+                    line = f"Warning: all first {check_frames} frames have abnormal leg position in video {video_id} -> {video_file}"
                     print(line)
                     with open(log_file, "a", encoding="utf-8") as f:
                         f.write(line + "\n")
 
-                if problem_barki_count == check_frames:
-                    line = f"Ostrzeżenie: wszystkie pierwsze {check_frames} klatki mają prawy bark nie po prawej stronie w wideo {video_id} -> {video_file}"
+                if problem_shoulders_count == check_frames:
+                    line = f"Warning: all first {check_frames} frames have right shoulder not on the right in video {video_id} -> {video_file}"
                     print(line)
                     with open(log_file, "a", encoding="utf-8") as f:
                         f.write(line + "\n")
-
 
             for idx in SELECTED_LANDMARKS:
                 lm = landmarks[idx]
@@ -159,7 +158,7 @@ def process_video(video_file, label, video_id):
     resampled = resample_sequence(sequence, target_len=target_len)
 
     rows = []
-    # Normalne dane
+    # Normal data
     for i in range(target_len):
         row = {'video_id': video_id, 'frame': i, 'label': label}
         for j, idx in enumerate(SELECTED_LANDMARKS):
@@ -167,7 +166,7 @@ def process_video(video_file, label, video_id):
             row[f"{LANDMARKS_INFO[idx]}_y"] = resampled[i, j*2+1]
         rows.append(row)
 
-    # Odbicie lustrzane
+    # Mirror augmentation
     resampled_mirror = resampled.copy()
     resampled_mirror[:, 0::2] = frame_width - resampled_mirror[:, 0::2]
     for i in range(target_len):
@@ -182,6 +181,7 @@ def process_video(video_file, label, video_id):
             row[f"{LANDMARKS_INFO[idx]}_y"] = resampled_mirror[i, j*2+1]
         rows.append(row)
 
+    # Random shift augmentation
     for k in range(random_add):
         dx = np.random.uniform(-max_shift, max_shift)
         dy = np.random.uniform(-max_shift, max_shift)
@@ -203,7 +203,7 @@ def process_single_video(args):
     return process_video(video_file, label, video_id)
 
 if __name__ == "__main__":
-    # === GROMADZENIE LISTY WIDEO ===
+    # === GATHER VIDEO LIST ===
     video_list = []
     video_id = 0
     for label_name in os.listdir(base_dir):
@@ -216,19 +216,19 @@ if __name__ == "__main__":
             continue
         for video_file in glob(os.path.join(label_path, "*.mp4")):
             video_list.append((video_file, label, video_id))
-            video_id += 2 + random_add  # normal + mirror + augmentacja
+            video_id += 2 + random_add  # normal + mirror + augmentation
 
     video_count = len(video_list)
-    print(f"Znaleziono {video_count} wideo do przetworzenia.")
+    print(f"Found {video_count} videos to process.")
 
-    # === RÓWNOLEGŁE PRZETWARZANIE ===
+    # === PARALLEL PROCESSING ===
     all_rows = []
     with ProcessPoolExecutor() as executor:
         for i, rows in enumerate(executor.map(process_single_video, video_list), 1):
             all_rows.extend(rows)
-            print(f"Przetworzono {i}/{video_count} wideo ({i/video_count*100:.1f}%)")
+            print(f"Processed {i}/{video_count} videos ({i/video_count*100:.1f}%)")
 
-    # === ZAPIS DO CSV ===
+    # === SAVE TO CSV ===
     fieldnames = ['video_id', 'frame', 'label']
     for idx in LANDMARKS_INFO:
         name = LANDMARKS_INFO[idx]
@@ -239,4 +239,5 @@ if __name__ == "__main__":
     df = pd.DataFrame(all_rows, columns=fieldnames)
     df.to_csv(output_csv, index=False)
 
-    print(f"Wszystkie dane zapisane do: {output_csv}")
+    print(f"All data saved to: {output_csv}")
+
