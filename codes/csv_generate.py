@@ -8,15 +8,17 @@ from glob import glob
 from tqdm import tqdm
 from dotenv import load_dotenv
 from concurrent.futures import ProcessPoolExecutor
+import absl.logging
 
 # === CONFIGURATION ===
 load_dotenv()
+absl.logging.set_verbosity(absl.logging.ERROR) 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'  # suppress TensorFlow logs
 base_dir = os.getenv("BASE_DIR")
 output_csv = os.getenv("OUTPUT_CSV")
 log_file = os.getenv("WARNING_TXT")
 target_len = 90
-random_add = 1  # number of augmented variants
+random_add = 3  # number of augmented variants
 max_shift = 10  # maximum pixel shift
 show_preview = False
 
