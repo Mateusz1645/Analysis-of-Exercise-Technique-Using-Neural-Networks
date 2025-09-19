@@ -1,0 +1,7 @@
+0 - prawidłowe
+1 - brak wyprostu początek ruchu
+2 - niepelna gorna faza
+3 - brak wyprostu koniec ruchu
+4 - zgięte kolana
+5 - asymetria bardziej do lewej 
+6 - asymetria bardziej do prawej
