@@ -1,5 +1,5 @@
 /data
-dataset_landmarks.csv
 .env
 .vscode/settings.json
-codes/tempCodeRunnerFile.py
+logs/pipeline.log
+/output
