@@ -1,6 +1,7 @@
 opencv-python==4.11.0.86
-mediapipe==0.10.21
+mediapipe==0.10.9
 pandas==2.3.0
 numpy==1.26.4
 scipy==1.13.1
 tqdm==4.65.0
+python-dotenv
