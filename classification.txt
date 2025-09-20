@@ -1,7 +1,8 @@
-0 - prawidłowe
-1 - brak wyprostu początek ruchu
-2 - niepelna gorna faza
-3 - brak wyprostu koniec ruchu
-4 - zgięte kolana
-5 - asymetria bardziej do lewej 
-6 - asymetria bardziej do prawej
+0 - correct
+1 - no extension at the beginning of the movement
+2 - incomplete top phase
+3 - no extension at the end of the movement
+4 - bent knees
+5 - asymmetry more to the left
+6 - asymmetry more to the right
+
