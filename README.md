@@ -58,7 +58,7 @@ df.to_csv("output/landmarks.csv", index=False)
 print("CSV saved to: output/landmarks.csv")
 ```
 
-## 2. Model Training
+## Model Training
 
 The `model/` folder provides an LSTM-based pipeline for classification.
 
