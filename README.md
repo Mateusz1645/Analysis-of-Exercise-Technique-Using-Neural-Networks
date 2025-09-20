@@ -1,3 +1,23 @@
+# Table of Contents
+
+1. [Data Processing](#data-processing)
+   - [Video Loading](#video-loading)
+   - [Pose Detection](#pose-detection)
+   - [Landmark Extraction](#landmark-extraction)
+   - [Sequence Resampling](#sequence-resampling)
+   - [Data Augmentation](#data-augmentation)
+   - [CSV Creation](#csv-creation)
+
+2. [Model Training](#model-training)
+   - [Training Pipeline (`main.py`)](#training-pipeline-mainpy)
+   - [Utility Modules](#utility-modules)
+
+3. [Workflow](#workflow)
+
+4. [Requirements & Installation](#requirements--installation)
+
+5. [Notes](#notes)
+
 ## Data Processing
 
 The `data_processing` module handles **video preprocessing, pose extraction, augmentation, and CSV generation**.
