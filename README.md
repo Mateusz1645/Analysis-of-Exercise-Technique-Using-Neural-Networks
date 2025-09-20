@@ -1,10 +1,30 @@
+# Table of Contents
+
+1. [Data Processing](#data-processing)
+   - [1 Video Loading](#1-video-loading)
+   - [2 Pose Detection](#2-pose-detection)
+   - [3 Landmark Extraction](#3-landmark-extraction)
+   - [4 Sequence Resampling](#4-sequence-resampling)
+   - [5 Data Augmentation](#5-data-augmentation)
+   - [6 CSV Creation](#6-csv-creation)
+
+2. [Model Training](#model-training)
+   - [Training Pipeline (`main.py`)](#main-pipeline-mainpy)
+   - [Utility Modules](#utilities)
+
+3. [Workflow](#example-workflow)
+
+4. [Requirements & Installation](#requirements--installation)
+
+5. [Notes](#notes)
+
 ## Data Processing
 
 The `data_processing` module handles **video preprocessing, pose extraction, augmentation, and CSV generation**.
 
 ### Pipeline Overview
 
-1. **Video Loading**  
+#### 1. Video Loading  
    - Reads videos from a folder structure:  
      ```
      BASE_DIR/
@@ -15,24 +35,24 @@ The `data_processing` module handles **video preprocessing, pose extraction, aug
      ```
    - Each subfolder corresponds to a label.
 
-2. **Pose Detection**  
+#### 2. Pose Detection
    - Uses **MediaPipe Pose** to detect body landmarks for each frame.
    - Automatically handles rotated or upside-down videos.
 
-3. **Landmark Extraction**  
+#### 3. Landmark Extraction
    - Extracts selected landmarks (e.g., shoulders, knees, ankles) and converts them to **pixel coordinates**.
    - Checks the first few frames for abnormal positions (legs above shoulders or shoulder asymmetry) and logs warnings if needed.
 
-4. **Sequence Resampling**  
+#### 4. Sequence Resampling
    - Each video sequence is **resampled** to a fixed length (`TARGET_LEN`) using linear interpolation.
    - Ensures all sequences have the same number of frames for downstream analysis.
 
-5. **Data Augmentation**  
+#### 5. Data Augmentation
    - **Mirror:** flips sequences horizontally.  
      - Special handling for asymmetry labels (5 ↔ 6).  
    - **Random Shift:** applies small random x/y offsets for robustness.
 
-6. **CSV Creation**  
+#### 6. CSV Creation
    - Each frame of each video (original + augmentations) is stored as a row:  
      ```
      video_id, frame, label, nose_x, nose_y, left_shoulder_x, ...
