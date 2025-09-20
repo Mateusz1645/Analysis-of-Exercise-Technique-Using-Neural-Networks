@@ -179,8 +179,6 @@ def process_video(video_file: str, label: int, video_id: int):
     flip_180 = False
     first_landmarks_checked = False
     check_frames = 5
-    problem_legs_count = 0
-    problem_shoulders_count = 0
 
     while True:
         ret, frame = cap.read()
@@ -238,7 +236,6 @@ def process_video(video_file: str, label: int, video_id: int):
         # Optional preview
         if SHOW_PREVIEW:
             cv2.imshow("Preview", frame)
-            key = cv2.waitKey(1) & 0xFF
             if cv2.getWindowProperty("Preview", cv2.WND_PROP_VISIBLE) < 1:
                 break
 
