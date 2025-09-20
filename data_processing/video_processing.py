@@ -2,7 +2,7 @@ import cv2
 import mediapipe as mp
 import numpy as np
 from scipy.interpolate import interp1d
-from config import TARGET_LEN, RANDOM_ADD, MAX_SHIFT, SHOW_PREVIEW, LANDMARKS_INFO, SELECTED_LANDMARKS
+from config import TARGET_LEN, RANDOM_ADD, MAX_SHIFT, SHOW_PREVIEW, LANDMARKS_INFO, SELECTED_LANDMARKS, MISSING_THRESHOLD
 import os
 import absl.logging
 import logging
@@ -179,6 +179,7 @@ def process_video(video_file: str, label: int, video_id: int):
     flip_180 = False
     first_landmarks_checked = False
     check_frames = 5
+    missing_landmarks_count = 0
 
     while True:
         ret, frame = cap.read()
@@ -231,7 +232,10 @@ def process_video(video_file: str, label: int, video_id: int):
             # Extract selected landmark coordinates
             frame_data = extract_landmarks(landmarks, frame_width, frame_height)
             sequence.append(frame_data)
-
+        else:
+            missing_landmarks_count += 1
+            if missing_landmarks_count >= MISSING_THRESHOLD:
+                logging.warning(f"No pose landmarks detected for {missing_landmarks_count} consecutive frames in video {video_id} -> {video_file}")
 
         # Optional preview
         if SHOW_PREVIEW:

@@ -12,7 +12,7 @@ TARGET_LEN = 90           # number of frames after resampling
 RANDOM_ADD = 2            # number of random shift augmentations
 MAX_SHIFT = 10            # maximum pixel shift for random augmentation
 SHOW_PREVIEW = False      # show video preview while processing
-
+MISSING_THRESHOLD = 10
 # === LANDMARKS ===
 LANDMARKS_INFO = {
     0: "nose",
