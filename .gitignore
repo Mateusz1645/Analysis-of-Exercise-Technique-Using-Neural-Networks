@@ -6,4 +6,4 @@ logs/pipeline.log
 **/__pycache__/
 *.py[cod]
 *.pyo
-
+**/tempCodeRunnerFile.py
