@@ -1,5 +1,5 @@
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense, Masking
+from tensorflow.keras.layers import LSTM, Dense, Masking, Dropout
 
 # === MODEL DEFINITION ===
 def build_model(input_shape, num_classes):
@@ -9,9 +9,10 @@ def build_model(input_shape, num_classes):
         
         # LSTM layer
         LSTM(64, return_sequences=False),
-        
+        Dropout(0.3),
         # Fully connected layers
         Dense(64, activation='relu'),
+        Dropout(0.5),
         Dense(num_classes, activation='softmax')
     ])
 

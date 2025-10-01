@@ -7,3 +7,4 @@ logs/pipeline.log
 *.py[cod]
 *.pyo
 **/tempCodeRunnerFile.py
+/tuner_dir
