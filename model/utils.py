@@ -5,8 +5,8 @@ from sklearn.model_selection import train_test_split
 from config import INPUT_CSV, TEST_SIZE, RANDOM_STATE, VAL_SIZE
 
 # === LOAD DATAFRAME FROM CSV ===
-def load_data():
-    return pd.read_csv(INPUT_CSV)
+def load_data(input=INPUT_CSV):
+    return pd.read_csv(input)
 
 # === PREPROCESS DATA FOR LSTM ===
 def preprocess_data(df, target_candidates=("target","label","class"), sequence_length=90, max_x=1080, max_y=1920):
@@ -41,15 +41,8 @@ def preprocess_data(df, target_candidates=("target","label","class"), sequence_l
     
     X = np.array(X_list)  # (num_samples, timesteps, num_features)
     y = np.array(y_list)
-    
-    # === SCALE FEATURES ===
-    X_scaled = X.copy()
-    X_scaled[:, :, 0::2] /= max_x  # wszystkie współrzędne X
-    X_scaled[:, :, 1::2] /= max_y  # wszystkie współrzędne Y
 
-    return X_scaled, y
-    
-    return X_scaled, y
+    return X, y
 
 # === TRAIN/TEST SPLIT ===
 def split_data(X, y, test_size=TEST_SIZE, val_size=VAL_SIZE, random_state=RANDOM_STATE, stratify=True):

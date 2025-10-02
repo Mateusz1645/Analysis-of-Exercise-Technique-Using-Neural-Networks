@@ -6,6 +6,7 @@ load_dotenv()
 
 # === FILE PATHS ===
 INPUT_CSV = os.getenv("INPUT_CSV")
+INPUT_TEST_CSV = os.getenv("INPUT_TEST_CSV", "landmarks_test.csv")
 
 # === HYPERPARAMETERS ===
 EPOCHS = 20

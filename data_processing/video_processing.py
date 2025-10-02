@@ -2,7 +2,7 @@ import cv2
 import mediapipe as mp
 import numpy as np
 from scipy.interpolate import interp1d
-from config import TARGET_LEN, RANDOM_ADD, MAX_SHIFT, SHOW_PREVIEW, LANDMARKS_INFO, SELECTED_LANDMARKS, MISSING_THRESHOLD
+from config import TARGET_LEN, RANDOM_ADD, MAX_SHIFT, SHOW_PREVIEW, LANDMARKS_INFO, SELECTED_LANDMARKS, MISSING_THRESHOLD, SELECTED_LANDMARKS_MIRRORED
 import os
 import absl.logging
 import logging
@@ -50,8 +50,8 @@ def extract_landmarks(landmarks, frame_width: int, frame_height: int) -> list:
     data = []
     for idx in SELECTED_LANDMARKS:
         lm = landmarks[idx]
-        cx = lm.x * frame_width
-        cy = lm.y * frame_height
+        cx = lm.x
+        cy = lm.y
         data.extend([cx, cy])
     return data
 
@@ -104,7 +104,8 @@ def augment_mirror(sequence: np.ndarray, frame_width: int) -> np.ndarray:
         np.ndarray: mirrored sequence
     """
     mirrored = sequence.copy()
-    mirrored[:, 0::2] = frame_width - mirrored[:, 0::2]  # mirror x-coordinates
+    mirrored[:, 0::2] = 1 - mirrored[:, 0::2]  # mirror x-coordinates
+
     return mirrored
 
 def augment_random_shift(sequence: np.ndarray, num_shifts: int = RANDOM_ADD) -> list[np.ndarray]:
@@ -128,17 +129,23 @@ def augment_random_shift(sequence: np.ndarray, num_shifts: int = RANDOM_ADD) -> 
         augmented_sequences.append(augmented)
     return augmented_sequences
 
-def create_rows(sequence, video_id, label):
+def create_rows(sequence, video_id, label, is_mirrored=False):
     """
     Converts a numpy sequence of landmarks to list of dictionaries for CSV.
     """
     rows = []
     for i in range(sequence.shape[0]):
         row = {'video_id': video_id, 'frame': i, 'label': label}
-        for j, idx in enumerate(SELECTED_LANDMARKS):
-            row[f"{LANDMARKS_INFO[idx]}_x"] = sequence[i, j*2]
-            row[f"{LANDMARKS_INFO[idx]}_y"] = sequence[i, j*2+1]
-        rows.append(row)
+        if is_mirrored:
+            for j, idx in enumerate(SELECTED_LANDMARKS_MIRRORED):
+                row[f"{LANDMARKS_INFO[idx]}_x"] = sequence[i, j*2]
+                row[f"{LANDMARKS_INFO[idx]}_y"] = sequence[i, j*2+1]
+            rows.append(row)
+        else:
+            for j, idx in enumerate(SELECTED_LANDMARKS):
+                row[f"{LANDMARKS_INFO[idx]}_x"] = sequence[i, j*2]
+                row[f"{LANDMARKS_INFO[idx]}_y"] = sequence[i, j*2+1]
+            rows.append(row)
     return rows
 
 def check_flip_180(landmarks) -> bool:
@@ -262,7 +269,7 @@ def process_video(video_file: str, label: int, video_id: int):
         mirrored_label = 6
     elif label == 6:
         mirrored_label = 5
-    rows.extend(create_rows(mirrored_seq, video_id + 1, mirrored_label))
+    rows.extend(create_rows(mirrored_seq, video_id + 1, mirrored_label, is_mirrored=True))
 
     # Random shift augmentations
     augmented_seqs = augment_random_shift(resampled)
