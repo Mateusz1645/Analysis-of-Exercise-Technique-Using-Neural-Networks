@@ -86,7 +86,6 @@ def main_test():
 
     # Process the single video
     all_rows = process_single_video(test_video)
-    print(all_rows)
     # Save the processed data to a temporary CSV
     test_output_csv = OUTPUT_CSV.replace(".csv", "_test.csv")
     save_to_csv(all_rows, test_output_csv)
