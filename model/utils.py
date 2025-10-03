@@ -11,13 +11,18 @@ def load_data():
 # === PREPROCESS DATA FOR LSTM ===
 def preprocess_data(df, target_candidates=("target","label","class"), sequence_length=60):
     """
-    Preprocess data for LSTM by grouping frames per video.
+    Preprocess data for LSTM using only joint angles.
+    
+    Args:
+        df: DataFrame containing video frames and angles
+        target_candidates: possible target column names
+        sequence_length: number of frames per LSTM sequence
     
     Returns:
         X: np.array of shape (num_samples, timesteps, num_features)
         y: np.array of shape (num_samples,)
     """
-    # === FIND TARGET COLUMN ===
+    # === Find the target column ===
     target_col = None
     for col in target_candidates:
         if col in df.columns:
@@ -26,14 +31,19 @@ def preprocess_data(df, target_candidates=("target","label","class"), sequence_l
     if target_col is None:
         raise KeyError(f"No target column found. Available columns: {list(df.columns)}")
     
-    # === GROUP BY VIDEO ID ===
+    # === Select only columns with angles ===
+    angle_cols = [col for col in df.columns if col.endswith('_angle')]
+    features_df = df[angle_cols].copy()
+
+    # === Group frames by video ===
     X_list, y_list = [], []
     video_ids = df['video_id'].unique()
     
     for vid in video_ids:
-        video_df = df[df['video_id'] == vid].sort_values('frame')
-        features = video_df.drop(columns=['video_id', 'frame', target_col]).values
-        
+        mask = df['video_id'] == vid
+        video_df = df[mask].sort_values('frame')
+        features = features_df[mask].loc[video_df.index].values  # maintain frame order
+
         if features.shape[0] == sequence_length:  # only full sequences
             X_list.append(features)
             y_list.append(video_df[target_col].iloc[0])
@@ -41,14 +51,7 @@ def preprocess_data(df, target_candidates=("target","label","class"), sequence_l
     X = np.array(X_list)  # (num_samples, timesteps, num_features)
     y = np.array(y_list)
     
-    # === SCALE FEATURES ===
-    num_samples, timesteps, num_features = X.shape
-    X_reshaped = X.reshape(-1, num_features)  # flatten all frames for scaler
-    scaler = MinMaxScaler()
-    X_scaled = scaler.fit_transform(X_reshaped)
-    X_scaled = X_scaled.reshape(num_samples, timesteps, num_features)  # back to 3D
-    
-    return X_scaled, y
+    return X, y
 
 # === TRAIN/TEST SPLIT ===
 def split_data(X, y):
