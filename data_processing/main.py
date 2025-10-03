@@ -73,24 +73,5 @@ def main():
     # Save the processed data to CSV
     save_to_csv(all_rows, OUTPUT_CSV)
 
-def main_test():
-    # Gather all videos from the base directory
-    video_list = gather_videos(BASE_DIR)
-    if not video_list:
-        logging.error("No videos found in the base directory!")
-        return
-
-    # Take only the first video for testing
-    test_video = video_list[0]
-    logging.info(f"Testing with video: {test_video[0]}, label: {test_video[1]}, id: {test_video[2]}")
-
-    # Process the single video
-    all_rows = process_single_video(test_video)
-    # Save the processed data to a temporary CSV
-    test_output_csv = OUTPUT_CSV.replace(".csv", "_test.csv")
-    save_to_csv(all_rows, test_output_csv)
-    logging.info(f"Test processing completed. Output saved to {test_output_csv}")
-
 if __name__ == "__main__":
     main()
-    # main_test()

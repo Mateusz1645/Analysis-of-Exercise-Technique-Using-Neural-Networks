@@ -2,17 +2,16 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
-from config import INPUT_CSV, TEST_SIZE, RANDOM_STATE, VAL_SIZE
+from config import INPUT_CSV, TEST_SIZE, RANDOM_STATE
 
 # === LOAD DATAFRAME FROM CSV ===
-def load_data(input=INPUT_CSV):
-    return pd.read_csv(input)
+def load_data():
+    return pd.read_csv(INPUT_CSV)
 
 # === PREPROCESS DATA FOR LSTM ===
-def preprocess_data(df, target_candidates=("target","label","class"), sequence_length=90, max_x=1080, max_y=1920):
+def preprocess_data(df, target_candidates=("target","label","class"), sequence_length=90):
     """
     Preprocess data for LSTM by grouping frames per video.
-    Scaling is done relative to maximum scene size (max_x, max_y) instead of min/max from data.
     
     Returns:
         X: np.array of shape (num_samples, timesteps, num_features)
@@ -41,22 +40,21 @@ def preprocess_data(df, target_candidates=("target","label","class"), sequence_l
     
     X = np.array(X_list)  # (num_samples, timesteps, num_features)
     y = np.array(y_list)
-
-    return X, y
+    
+    # === SCALE FEATURES ===
+    num_samples, timesteps, num_features = X.shape
+    X_reshaped = X.reshape(-1, num_features)  # flatten all frames for scaler
+    scaler = MinMaxScaler()
+    X_scaled = scaler.fit_transform(X_reshaped)
+    X_scaled = X_scaled.reshape(num_samples, timesteps, num_features)  # back to 3D
+    
+    return X_scaled, y
 
 # === TRAIN/TEST SPLIT ===
-def split_data(X, y, test_size=TEST_SIZE, val_size=VAL_SIZE, random_state=RANDOM_STATE, stratify=True):
-    strat = y if stratify else None
-    
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=test_size, random_state=random_state, stratify=strat
+def split_data(X, y):
+    return train_test_split(
+        X, y,
+        test_size=TEST_SIZE,
+        random_state=RANDOM_STATE,
+        stratify=y
     )
-    
-    if val_size:
-        strat_val = y_train if stratify else None
-        X_train, X_val, y_train, y_val = train_test_split(
-            X_train, y_train, test_size=val_size, random_state=random_state, stratify=strat_val
-        )
-        return X_train, X_val, X_test, y_train, y_val, y_test
-    
-    return X_train, X_test, y_train, y_test
