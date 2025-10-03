@@ -9,7 +9,7 @@ def load_data():
     return pd.read_csv(INPUT_CSV)
 
 # === PREPROCESS DATA FOR LSTM ===
-def preprocess_data(df, target_candidates=("target","label","class"), sequence_length=90):
+def preprocess_data(df, target_candidates=("target","label","class"), sequence_length=60):
     """
     Preprocess data for LSTM by grouping frames per video.
     
