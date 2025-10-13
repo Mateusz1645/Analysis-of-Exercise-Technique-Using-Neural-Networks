@@ -21,17 +21,17 @@ def build_model_tuner(hp):
     
     # LSTM layer
     model.add(LSTM(
-        units=hp.Choice('lstm_units', [32, 64, 128]),
+        units=hp.Choice('lstm_units', [64, 128, 256]),
         return_sequences=False,
-        dropout=hp.Choice('lstm_dropout', [0.2, 0.3, 0.5])
+        dropout=hp.Choice('lstm_dropout', [0.1])
     ))
     
     # Dense layer
     model.add(Dense(
-        units=hp.Choice('dense_units', [32, 64]),
+        units=hp.Choice('dense_units', [64, 128, 256]),
         activation='relu'
     ))
-    model.add(Dropout(hp.Choice('dense_dropout', [0.2, 0.3, 0.5])))
+    model.add(Dropout(hp.Choice('dense_dropout', [0.1])))
 
     # Output
     model.add(Dense(num_classes, activation='softmax'))
@@ -49,7 +49,7 @@ tuner = GridSearch(
     build_model_tuner,
     objective='val_accuracy',
     max_trials=None,  # wszystkie kombinacje
-    executions_per_trial=1,
+    executions_per_trial=3,
     directory='tuner_dir',
     project_name='lstm_video_grid'
 )
