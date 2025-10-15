@@ -2,8 +2,8 @@
 .env
 .vscode/settings.json
 logs/pipeline.log
-/output
 **/__pycache__/
 *.py[cod]
 *.pyo
 **/tempCodeRunnerFile.py
+/tuner_dir

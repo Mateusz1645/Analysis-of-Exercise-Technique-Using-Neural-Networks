@@ -2,6 +2,7 @@ import os
 from glob import glob
 from concurrent.futures import ProcessPoolExecutor
 import pandas as pd
+import numpy as np
 
 from config import BASE_DIR, OUTPUT_CSV, LANDMARKS_INFO, RANDOM_ADD
 from video_processing import process_single_video
@@ -45,16 +46,84 @@ def gather_videos(base_dir):
 
 def save_to_csv(all_rows, output_csv):
     """
-    Saves a list of dictionaries (landmark data) to a CSV file.
+    Saves a list of dictionaries (landmark data) to a CSV file,
+    calculating joint angles and adding them as additional columns.
     """
+    # === Base columns: video ID, frame, label + landmark coordinates ===
     fieldnames = ['video_id', 'frame', 'label']
     for idx in LANDMARKS_INFO:
         name = LANDMARKS_INFO[idx]
         fieldnames.extend([f"{name}_x", f"{name}_y"])
+    
+    # Create DataFrame from raw landmark data
     df = pd.DataFrame(all_rows, columns=fieldnames)
+    
+    def calculate_angle(a, b, c):
+        a = np.array(a)
+        b = np.array(b)
+        c = np.array(c)
+        ba = a - b
+        bc = c - b
+        cosine_angle = np.dot(ba, bc) / (np.linalg.norm(ba) * np.linalg.norm(bc))
+        angle = np.arccos(np.clip(cosine_angle, -1.0, 1.0))
+        return np.degrees(angle)
+    # === Function to calculate joint angles for a single row ===
+    def calculate_angles(row):
+        angles = {}
+        # Elbows
+        angles['left_elbow_angle'] = calculate_angle(
+            [row['left_shoulder_x'], row['left_shoulder_y']],
+            [row['left_elbow_x'], row['left_elbow_y']],
+            [row['left_wrist_x'], row['left_wrist_y']]
+        )
+        angles['right_elbow_angle'] = calculate_angle(
+            [row['right_shoulder_x'], row['right_shoulder_y']],
+            [row['right_elbow_x'], row['right_elbow_y']],
+            [row['right_wrist_x'], row['right_wrist_y']]
+        )
+        # Shoulders
+        angles['left_shoulder_angle'] = calculate_angle(
+            [row['left_elbow_x'], row['left_elbow_y']],
+            [row['left_shoulder_x'], row['left_shoulder_y']],
+            [row['left_hip_x'], row['left_hip_y']]
+        )
+        angles['right_shoulder_angle'] = calculate_angle(
+            [row['right_elbow_x'], row['right_elbow_y']],
+            [row['right_shoulder_x'], row['right_shoulder_y']],
+            [row['right_hip_x'], row['right_hip_y']]
+        )
+        # Hips
+        angles['left_hip_angle'] = calculate_angle(
+            [row['left_shoulder_x'], row['left_shoulder_y']],
+            [row['left_hip_x'], row['left_hip_y']],
+            [row['left_knee_x'], row['left_knee_y']]
+        )
+        angles['right_hip_angle'] = calculate_angle(
+            [row['right_shoulder_x'], row['right_shoulder_y']],
+            [row['right_hip_x'], row['right_hip_y']],
+            [row['right_knee_x'], row['right_knee_y']]
+        )
+        # Knees
+        angles['left_knee_angle'] = calculate_angle(
+            [row['left_hip_x'], row['left_hip_y']],
+            [row['left_knee_x'], row['left_knee_y']],
+            [row['left_ankle_x'], row['left_ankle_y']]
+        )
+        angles['right_knee_angle'] = calculate_angle(
+            [row['right_hip_x'], row['right_hip_y']],
+            [row['right_knee_x'], row['right_knee_y']],
+            [row['right_ankle_x'], row['right_ankle_y']]
+        )
+        return pd.Series(angles)
+    
+    # === Add joint angle columns to the DataFrame ===
+    angles_df = df.apply(calculate_angles, axis=1)
+    df = pd.concat([df, angles_df], axis=1)
+    
+    # === Save the final DataFrame to CSV ===
     df.to_csv(output_csv, index=False)
-    line = f"All data saved to: {output_csv}"
-    logging.info(line)
+    logging.info(f"All data saved to: {output_csv}")
+
 
 def main():
     # Gather all videos from the base directory
