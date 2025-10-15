@@ -8,7 +8,7 @@ load_dotenv()
 INPUT_CSV = os.getenv("INPUT_CSV")
 
 # === HYPERPARAMETERS ===
-EPOCHS = 80
+EPOCHS = 100
 BATCH_SIZE = 32
 TEST_SIZE = 0.1
 RANDOM_STATE = 42

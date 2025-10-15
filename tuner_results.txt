@@ -1,0 +1,36 @@
+Hyperparameter Tuning Results
+
+=== Model: LSTM ===
+Best hyperparameters:
+lstm_units: 128
+lstm_dropout: 0.1
+dense_units: 256
+dense_dropout: 0.1
+Test loss: 0.5555, Test accuracy: 0.8281
+
+=== Model: RNN ===
+Best hyperparameters:
+rnn_units: 64
+rnn_dropout: 0.1
+dense_units: 128
+dense_dropout: 0.1
+Test loss: 1.3247, Test accuracy: 0.5234
+
+=== Model: CNN ===
+Best hyperparameters:
+conv_filters: 64
+kernel_size: 5
+dense_units: 256
+dropout_rate: 0.1
+Test loss: 0.0663, Test accuracy: 0.9844
+
+=== Model: CNN+LSTM ===
+Best hyperparameters:
+conv_filters: 32
+kernel_size: 5
+lstm_units: 128
+lstm_dropout: 0.1
+dense_units: 128
+dropout_rate: 0.1
+Test loss: 0.0536, Test accuracy: 0.9844
+

@@ -3,6 +3,7 @@ from config import EPOCHS, BATCH_SIZE
 from models import build_model
 from metrics import plot_history, evaluate_model
 from utils import load_data, preprocess_data, split_data
+from tensorflow.keras.callbacks import EarlyStopping
 
 # === PIPELINE ENTRY POINT ===
 def main():
@@ -16,13 +17,21 @@ def main():
     num_classes = len(np.unique(y))
     model = build_model(input_shape, num_classes)
 
+    # EarlyStopping callback
+    early_stopping = EarlyStopping(
+        monitor='val_loss',    # monitorujemy stratę na zbiorze walidacyjnym
+        patience=10,            # liczba epok bez poprawy przed zatrzymaniem
+        restore_best_weights=True  # przywracamy wagi z najlepszej epoki
+    )
+
     # Train model
     history = model.fit(
         X_train, y_train,
-        validation_split=0.2,
+        validation_split=0.1,
         epochs=EPOCHS,
         batch_size=BATCH_SIZE,
-        verbose=1
+        verbose=1,
+        callbacks=[early_stopping]  # dodajemy callback
     )
 
     # Evaluate model

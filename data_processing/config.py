@@ -9,7 +9,7 @@ WARNING_LOG = os.getenv("WARNING_TXT", "./output/warnings.txt")
 
 # === PROCESSING PARAMETERS ===
 TARGET_LEN = 60           # number of frames after resampling
-RANDOM_ADD = 1            # number of random shift augmentations
+RANDOM_ADD = 2            # number of random shift augmentations
 MAX_SHIFT = 5            # maximum pixel shift for random augmentation
 SHOW_PREVIEW = False      # show video preview while processing
 MISSING_THRESHOLD = 10
