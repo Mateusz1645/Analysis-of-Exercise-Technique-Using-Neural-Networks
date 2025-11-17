@@ -107,21 +107,22 @@ def augment_mirror(sequence: np.ndarray, frame_width: int) -> np.ndarray:
     mirrored[:, 0::2] = frame_width - mirrored[:, 0::2]  # mirror x-coordinates
     return mirrored
 
-def augment_random_shift(sequence: np.ndarray, num_shifts: int = RANDOM_ADD) -> list[np.ndarray]:
+def augment_random_shift(sequence: np.ndarray, num_shifts: int = RANDOM_ADD, sigma: float = MAX_SHIFT) -> list[np.ndarray]:
     """
-    Apply random x/y shifts to a sequence for data augmentation.
+    Apply random Gaussian x/y shifts to a sequence for data augmentation.
 
     Args:
         sequence: np.ndarray of shape (num_frames, num_landmarks*2)
         num_shifts: number of augmented variants to generate
+        sigma: standard deviation of Gaussian noise
 
     Returns:
         list of np.ndarray: each array is an augmented sequence
     """
     augmented_sequences = []
     for _ in range(num_shifts):
-        dx = np.random.uniform(-MAX_SHIFT, MAX_SHIFT)
-        dy = np.random.uniform(-MAX_SHIFT, MAX_SHIFT)
+        dx = np.random.normal(0, sigma)
+        dy = np.random.normal(0, sigma)
         augmented = sequence.copy()
         augmented[:, 0::2] += dx  # x-coordinates
         augmented[:, 1::2] += dy  # y-coordinates

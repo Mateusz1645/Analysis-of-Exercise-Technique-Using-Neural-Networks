@@ -1,24 +1,18 @@
 import cv2
 import mediapipe as mp
-
+import os
 
 mp_pose = mp.solutions.pose
 pose = mp_pose.Pose(static_image_mode=False, min_detection_confidence=0.5)
 
 LANDMARKS_INFO = {
-    0: "nose",          
-    11: "left_shoulder",
-    12: "right_shoulder",
-    13: "left_elbow",
-    14: "right_elbow",
-    15: "left_wrist",
-    16: "right_wrist",
-    23: "left_hip",
-    24: "right_hip",
-    25: "left_knee",
-    26: "right_knee",
-    27: "left_ankle",
-    28: "right_ankle"
+    0: "nose",
+    11: "left_shoulder", 12: "right_shoulder",
+    13: "left_elbow", 14: "right_elbow",
+    15: "left_wrist", 16: "right_wrist",
+    23: "left_hip", 24: "right_hip",
+    25: "left_knee", 26: "right_knee",
+    27: "left_ankle", 28: "right_ankle"
 }
 SELECTED_LANDMARKS = list(LANDMARKS_INFO.keys())
 
@@ -32,6 +26,11 @@ CUSTOM_CONNECTIONS = [
     (23, 25), (25, 27),       # lewa noga
     (24, 26), (26, 28)        # prawa noga
 ]
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
+input_video_path = os.path.join(script_dir, "20250628_155721.mp4")
+print(input_video_path)
+output_video_path = os.path.join(script_dir, "output.mp4")
 
 cap = cv2.VideoCapture(input_video_path)
 if not cap.isOpened():
