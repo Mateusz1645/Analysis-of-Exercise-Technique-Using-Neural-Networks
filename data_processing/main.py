@@ -14,7 +14,7 @@ os.makedirs(os.path.dirname(OUTPUT_CSV), exist_ok=True)
 absl.logging.set_verbosity(absl.logging.ERROR) 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
-# === Logging configuration ===
+# Logging configuration
 os.makedirs("logs", exist_ok=True)
 logging.basicConfig(
     level=logging.INFO,
@@ -49,7 +49,7 @@ def save_to_csv(all_rows, output_csv):
     Saves a list of dictionaries (landmark data) to a CSV file,
     calculating joint angles and adding them as additional columns.
     """
-    # === Base columns: video ID, frame, label + landmark coordinates ===
+    # Base columns: video ID, frame, label + landmark coordinates
     fieldnames = ['video_id', 'frame', 'label']
     for idx in LANDMARKS_INFO:
         name = LANDMARKS_INFO[idx]
@@ -67,7 +67,7 @@ def save_to_csv(all_rows, output_csv):
         cosine_angle = np.dot(ba, bc) / (np.linalg.norm(ba) * np.linalg.norm(bc))
         angle = np.arccos(np.clip(cosine_angle, -1.0, 1.0))
         return np.degrees(angle)
-    # === Function to calculate joint angles for a single row ===
+    # Function to calculate joint angles for a single row
     def calculate_angles(row):
         angles = {}
         # Elbows
@@ -116,11 +116,11 @@ def save_to_csv(all_rows, output_csv):
         )
         return pd.Series(angles)
     
-    # === Add joint angle columns to the DataFrame ===
+    # Add joint angle columns to the DataFrame
     angles_df = df.apply(calculate_angles, axis=1)
     df = pd.concat([df, angles_df], axis=1)
     
-    # === Save the final DataFrame to CSV ===
+    # Save the final DataFrame to CSV
     df.to_csv(output_csv, index=False)
     logging.info(f"All data saved to: {output_csv}")
 

@@ -52,7 +52,7 @@ def build_cnn_model(hp):
     model.add(Masking(mask_value=0.0, input_shape=input_shape))
     
     model.add(Conv1D(
-        filters=hp.Choice('conv_filters', [32, 64, 128]),
+        filters=hp.Choice('conv_filters', [32, 64, 128, 256]),
         kernel_size=hp.Choice('kernel_size', [3, 5]),
         activation='relu'
     ))
@@ -76,20 +76,20 @@ def build_cnn_lstm_model(hp):
     model.add(Masking(mask_value=0.0, input_shape=input_shape))
     
     model.add(Conv1D(
-        filters=hp.Choice('conv_filters', [32, 64]),
+        filters=hp.Choice('conv_filters', [32, 64, 128, 256]),
         kernel_size=hp.Choice('kernel_size', [3, 5]),
         activation='relu'
     ))
     model.add(MaxPooling1D(pool_size=2))
     
     model.add(LSTM(
-        units=hp.Choice('lstm_units', [64, 128]),
+        units=hp.Choice('lstm_units', [64, 128, 256]),
         return_sequences=False,
         dropout=hp.Choice('lstm_dropout', [0.1])
     ))
     
     model.add(Dense(
-        units=hp.Choice('dense_units', [64, 128]),
+        units=hp.Choice('dense_units', [64, 128, 256]),
         activation='relu'
     ))
     model.add(Dropout(hp.Choice('dropout_rate', [0.1])))
@@ -139,9 +139,9 @@ for model_name, build_fn in models_to_test:
     
     # EarlyStopping callback
     early_stop = EarlyStopping(
-        monitor='val_loss',       # monitorujemy stratę walidacyjną
-        patience=10,              # jeśli brak poprawy przez 10 epok, zatrzymujemy
-        restore_best_weights=True # przywraca najlepsze wagi modelu
+        monitor='val_loss',       
+        patience=10,              
+        restore_best_weights=True 
     )
     
     tuner = GridSearch(
@@ -156,10 +156,10 @@ for model_name, build_fn in models_to_test:
     tuner.search(
         X_train, y_train,
         validation_data=(X_val, y_val),
-        epochs=EPOCHS,           # np. 100 lub więcej, EarlyStopping zatrzyma wcześniej
+        epochs=EPOCHS,          
         batch_size=BATCH_SIZE,
         verbose=1,
-        callbacks=[early_stop]   # dodajemy callback
+        callbacks=[early_stop]   
     )
     
     best_model = tuner.get_best_models(1)[0]
@@ -168,4 +168,4 @@ for model_name, build_fn in models_to_test:
     
     save_results('tuner_results.txt', model_name, best_hp, loss, acc)
 
-print("✅ Wszystkie modele przetestowane. Wyniki zapisane w tuner_results.txt")
+print("All models tested. Result are in tuner_results.txt")

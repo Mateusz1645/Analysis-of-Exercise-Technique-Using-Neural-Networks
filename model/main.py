@@ -5,7 +5,7 @@ from metrics import plot_history, evaluate_model
 from utils import load_data, preprocess_data, split_data
 from tensorflow.keras.callbacks import EarlyStopping
 
-# === PIPELINE ENTRY POINT ===
+# PIPELINE ENTRY POINT
 def main():
     # Load and preprocess data
     df = load_data()
@@ -19,9 +19,9 @@ def main():
 
     # EarlyStopping callback
     early_stopping = EarlyStopping(
-        monitor='val_loss',    # monitorujemy stratę na zbiorze walidacyjnym
-        patience=10,            # liczba epok bez poprawy przed zatrzymaniem
-        restore_best_weights=True  # przywracamy wagi z najlepszej epoki
+        monitor='val_loss',    
+        patience=10,            
+        restore_best_weights=True 
     )
 
     # Train model

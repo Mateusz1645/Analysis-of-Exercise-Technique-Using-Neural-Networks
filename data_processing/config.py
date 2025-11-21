@@ -1,19 +1,20 @@
 import os
 from dotenv import load_dotenv
 
-# === LOAD ENV VARIABLES ===
+# LOAD ENV VARIABLES
 load_dotenv()
 BASE_DIR = os.getenv("BASE_DIR", "./data")
 OUTPUT_CSV = os.getenv("OUTPUT_CSV", "./output/landmarks.csv")
 WARNING_LOG = os.getenv("WARNING_TXT", "./output/warnings.txt")
 
-# === PROCESSING PARAMETERS ===
+# PROCESSING PARAMETERS
 TARGET_LEN = 60           # number of frames after resampling
 RANDOM_ADD = 2            # number of random shift augmentations
 MAX_SHIFT = 10            # sigma pixel shift for random augmentation
 SHOW_PREVIEW = False      # show video preview while processing
 MISSING_THRESHOLD = 10
-# === LANDMARKS ===
+
+# LANDMARKS
 LANDMARKS_INFO = {
     0: "nose",
     11: "left_shoulder", 12: "right_shoulder",
@@ -36,5 +37,5 @@ LANDMARKS_INFO_MIRRORED = {
 }
 SELECTED_LANDMARKS_MIRRORED = list(LANDMARKS_INFO_MIRRORED.keys())
 
-# === WARNING CHECK PARAMETERS ===
+# WARNING CHECK PARAMETERS
 CHECK_FRAMES = 5  # number of first frames to check for abnormal positions

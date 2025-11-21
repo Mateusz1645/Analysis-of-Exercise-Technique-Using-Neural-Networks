@@ -4,11 +4,11 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
 from config import INPUT_CSV, TEST_SIZE, RANDOM_STATE, VAL_SIZE
 
-# === LOAD DATAFRAME FROM CSV ===
+# LOAD DATAFRAME FROM CSV
 def load_data():
     return pd.read_csv(INPUT_CSV)
 
-# === PREPROCESS DATA FOR LSTM ===
+# PREPROCESS DATA FOR LSTM
 def preprocess_data(df, target_candidates=("target","label","class"), sequence_length=60):
     """
     Preprocess data for LSTM using only joint angles.
@@ -22,7 +22,7 @@ def preprocess_data(df, target_candidates=("target","label","class"), sequence_l
         X: np.array of shape (num_samples, timesteps, num_features)
         y: np.array of shape (num_samples,)
     """
-    # === Find the target column ===
+    # Find the target column
     target_col = None
     for col in target_candidates:
         if col in df.columns:
@@ -31,11 +31,11 @@ def preprocess_data(df, target_candidates=("target","label","class"), sequence_l
     if target_col is None:
         raise KeyError(f"No target column found. Available columns: {list(df.columns)}")
     
-    # === Select only columns with angles ===
+    # Select only columns with angles
     angle_cols = [col for col in df.columns if col.endswith('_angle')]
     features_df = df[angle_cols].copy()
 
-    # === Group frames by video ===
+    # Group frames by video
     X_list, y_list = [], []
     video_ids = df['video_id'].unique()
     
@@ -53,7 +53,7 @@ def preprocess_data(df, target_candidates=("target","label","class"), sequence_l
     
     return X, y
 
-# === TRAIN/TEST SPLIT ===
+# TRAIN/TEST SPLIT
 def split_data(X, y, is_val=False, test_size=TEST_SIZE, val_size=VAL_SIZE, random_state=RANDOM_STATE, stratify=True):
     strat = y if stratify else None
     

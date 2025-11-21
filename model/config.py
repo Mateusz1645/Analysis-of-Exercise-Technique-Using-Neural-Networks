@@ -1,15 +1,15 @@
 import os
 from dotenv import load_dotenv
 
-# === LOAD ENV VARIABLES ===
+# LOAD ENV VARIABLES
 load_dotenv()
 
-# === FILE PATHS ===
+# FILE PATHS
 INPUT_CSV = os.getenv("INPUT_CSV")
 
-# === HYPERPARAMETERS ===
+# HYPERPARAMETERS
 EPOCHS = 100
 BATCH_SIZE = 32
-TEST_SIZE = 0.1
+TEST_SIZE = 0.15
 RANDOM_STATE = 42
-VAL_SIZE = 0.1
+VAL_SIZE = 0.15

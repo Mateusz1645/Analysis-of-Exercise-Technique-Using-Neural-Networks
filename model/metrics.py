@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, classification_report
 
-# === TRAINING HISTORY PLOTS ===
+# TRAINING HISTORY PLOTS
 def plot_history(history):
     plt.figure(figsize=(12,5))
     
@@ -29,7 +29,7 @@ def plot_history(history):
     plt.tight_layout()
     plt.show()
 
-# === CONFUSION MATRIX & REPORT ===
+# CONFUSION MATRIX & REPORT
 def evaluate_model(model, X_test, y_test, y_labels):
     # Predictions
     y_pred_probs = model.predict(X_test)
