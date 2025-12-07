@@ -30,7 +30,7 @@ def plot_history(history):
     plt.show()
 
 # CONFUSION MATRIX & REPORT
-def evaluate_model(model, X_test, y_test, y_labels):
+def evaluate_model(model, X_test, y_test, model_type, y_labels=['Prawidłowe', 'Brak wyprostu na początku', 'Niepełna górna faza', 'Brak wyprostu na koncu', 'Zgięte kolana', 'Bardziej do lewej', 'Bardziej do prawej']):
     # Predictions
     y_pred_probs = model.predict(X_test)
     y_pred = np.argmax(y_pred_probs, axis=1)
@@ -38,9 +38,16 @@ def evaluate_model(model, X_test, y_test, y_labels):
     # Confusion matrix
     cm = confusion_matrix(y_test, y_pred, normalize='true')
     disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=y_labels)
-    disp.plot(cmap=plt.cm.Blues, xticks_rotation='vertical')
-    plt.title("Confusion Matrix")
+    fig, ax = plt.subplots(figsize=(10,8))
+    disp.plot(cmap=plt.cm.Blues, ax=ax, values_format=".2f")
+
+    ax.set_xlabel("Przewidywana klasa", fontsize=12)
+    ax.set_ylabel("Prawdziwa klasa", fontsize=12)
+    ax.set_title(f"Macierz pomyłek - {model_type.upper()}", fontsize=14)
+
+    plt.xticks(rotation=45, ha='right', fontsize=10)
+    plt.yticks(fontsize=10)
+    plt.subplots_adjust(bottom=0.25, left=0.2, top=0.9, right=0.95)
     plt.show()
 
-    # Classification report
-    print(classification_report(y_test, y_pred))
+    print(classification_report(y_test, y_pred, target_names=y_labels))

@@ -15,7 +15,8 @@ def main():
     # Build model
     input_shape = (X_train.shape[1], X_train.shape[2])
     num_classes = len(np.unique(y))
-    model = build_model(input_shape, num_classes, model_type="rnn")
+    model_type = "cnn"
+    model = build_model(input_shape, num_classes, model_type=model_type)
     # EarlyStopping callback
     early_stopping = EarlyStopping(
         monitor='val_loss',    
@@ -40,7 +41,7 @@ def main():
 
     # Plots and reports
     plot_history(history)
-    evaluate_model(model, X_test, y_test, y_labels=np.unique(y))
+    evaluate_model(model, X_test, y_test, model_type=model_type)
 
 if __name__ == "__main__":
     main()
