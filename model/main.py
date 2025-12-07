@@ -15,8 +15,7 @@ def main():
     # Build model
     input_shape = (X_train.shape[1], X_train.shape[2])
     num_classes = len(np.unique(y))
-    model = build_model(input_shape, num_classes)
-
+    model = build_model(input_shape, num_classes, model_type="rnn")
     # EarlyStopping callback
     early_stopping = EarlyStopping(
         monitor='val_loss',    
@@ -27,7 +26,7 @@ def main():
     # Train model
     history = model.fit(
         X_train, y_train,
-        validation_split=0.1,
+        validation_split=0.15,
         epochs=EPOCHS,
         batch_size=BATCH_SIZE,
         verbose=1,

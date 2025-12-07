@@ -3,6 +3,8 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Masking, Dropout, Conv1D, MaxPooling1D, Flatten, TimeDistributed, SimpleRNN
 from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.optimizers import Adam
+from sklearn.metrics import classification_report
+import pandas as pd
 from keras_tuner import GridSearch
 from utils import load_data, preprocess_data, split_data
 from config import EPOCHS, BATCH_SIZE
@@ -14,15 +16,6 @@ X_train, X_val, X_test, y_train, y_val, y_test = split_data(X, y, is_val=True)
 
 input_shape = (X_train.shape[1], X_train.shape[2])
 num_classes = len(np.unique(y))
-
-# Function to save results to a file
-def save_results(filename, model_name, best_hp, test_loss, test_acc):
-    with open(filename, 'a') as f:
-        f.write(f"=== Model: {model_name} ===\n")
-        f.write("Best hyperparameters:\n")
-        for param, value in best_hp.items():
-            f.write(f"{param}: {value}\n")
-        f.write(f"Test loss: {test_loss:.4f}, Test accuracy: {test_acc:.4f}\n\n")
 
 # LSTM model tuner
 def build_lstm_model(hp):
@@ -123,49 +116,66 @@ def build_rnn_model(hp):
 
 # List of models to test
 models_to_test = [
-    ('LSTM', build_lstm_model),
-    ('RNN', build_rnn_model),
-    ('CNN', build_cnn_model),
+    # ('LSTM', build_lstm_model),
+    # ('RNN', build_rnn_model),
+    # ('CNN', build_cnn_model),
     ('CNN+LSTM', build_cnn_lstm_model)
 ]
-
-# Clear previous results file
-with open('tuner_results.txt', 'w') as f:
-    f.write("Hyperparameter Tuning Results\n\n")
 
 # Run tuner for each model
 for model_name, build_fn in models_to_test:
     print(f"=== Running tuner for {model_name} ===")
-    
-    # EarlyStopping callback
+
+    all_trials_df = [] 
+
     early_stop = EarlyStopping(
-        monitor='val_loss',       
-        patience=10,              
-        restore_best_weights=True 
+        monitor='val_loss',
+        patience=10,
+        restore_best_weights=True
     )
-    
+
     tuner = GridSearch(
         build_fn,
         objective='val_accuracy',
         max_trials=None,
-        executions_per_trial=3,
+        executions_per_trial=1,
         directory='tuner_dir',
         project_name=f'{model_name}_grid'
     )
-    
+
     tuner.search(
         X_train, y_train,
         validation_data=(X_val, y_val),
-        epochs=EPOCHS,          
+        epochs=EPOCHS,
         batch_size=BATCH_SIZE,
-        verbose=1,
-        callbacks=[early_stop]   
+        callbacks=[early_stop],
+        verbose=1
     )
-    
-    best_model = tuner.get_best_models(1)[0]
-    best_hp = tuner.get_best_hyperparameters(1)[0].values
-    loss, acc = best_model.evaluate(X_test, y_test)
-    
-    save_results('tuner_results.txt', model_name, best_hp, loss, acc)
 
-print("All models tested. Result are in tuner_results.txt")
+    best_models = tuner.get_best_models(num_models=len(tuner.oracle.trials))
+    best_trials = tuner.oracle.get_best_trials(num_trials=len(best_models))
+
+    for i, model in enumerate(best_models):
+
+        y_pred_probs = model.predict(X_test)
+        y_pred = y_pred_probs.argmax(axis=1)
+
+        report_dict = classification_report(y_test, y_pred, output_dict=True)
+
+        report_df = pd.DataFrame(report_dict).T
+
+        hp_df = pd.DataFrame([best_trials[i].hyperparameters.values])
+
+        report_df['model'] = model_name
+        report_df['trial'] = i + 1
+
+        for col, val in hp_df.iloc[0].items():
+            report_df[col] = val
+
+        all_trials_df.append(report_df)
+
+    final_df = pd.concat(all_trials_df)
+
+    final_df.to_csv(f"{model_name}_tuning_report_df.csv", index=True)
+
+    print(f"Raport zapisany: {model_name}_tuning_report_df.csv")

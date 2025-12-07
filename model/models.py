@@ -19,7 +19,7 @@ def build_model(input_shape, num_classes, model_type='cnn_lstm'):
         # RNN – best param
         model.add(SimpleRNN(64, return_sequences=False, dropout=0.1, input_shape=input_shape))
         model.add(Dropout(0.1))
-        model.add(Dense(128, activation='relu'))
+        model.add(Dense(256, activation='relu'))
         model.add(Dropout(0.1))
         
     elif model_type == 'cnn':
