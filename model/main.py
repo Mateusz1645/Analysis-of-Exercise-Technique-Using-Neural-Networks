@@ -10,7 +10,7 @@ def main():
     # Load and preprocess data
     df = load_data()
     X, y = preprocess_data(df)
-    X_train, X_test, y_train, y_test = split_data(X, y)
+    X_train, X_val, X_test, y_train, y_val, y_test = split_data(X, y, is_val=True)
 
     # Build model
     input_shape = (X_train.shape[1], X_train.shape[2])
@@ -26,7 +26,7 @@ def main():
     # Train model
     history = model.fit(
         X_train, y_train,
-        validation_split=0.15,
+        validation_data=(X_val, y_val),
         epochs=EPOCHS,
         batch_size=BATCH_SIZE,
         verbose=1,

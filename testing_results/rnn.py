@@ -5,7 +5,7 @@ import warnings
 from sklearn.exceptions import UndefinedMetricWarning
 warnings.filterwarnings("ignore", category=UndefinedMetricWarning)
 
-from sklearn.model_selection import KFold
+from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import classification_report
 from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.models import Sequential
@@ -40,17 +40,13 @@ results = []
 
 for rnn_units, dense_units, dropout in param_combinations:
     print(f"\n=== TESTUJE: RNN={rnn_units}, Dense={dense_units}, Dropout={dropout} ===")
-    kf = KFold(n_splits=K, shuffle=True, random_state=42)
+    kf = StratifiedKFold(n_splits=K, shuffle=True, random_state=42)
     
     fold_reports = []
     
-    for train_idx, test_idx in kf.split(X):
+    for train_idx, test_idx in kf.split(X, y):
         X_train, X_test = X[train_idx], X[test_idx]
         y_train, y_test = y[train_idx], y[test_idx]
-        
-        classes = np.unique(y_train)
-        class_weights = compute_class_weight(class_weight='balanced', classes=classes, y=y_train)
-        class_weights = dict(zip(classes, class_weights))
 
         early_stopping = EarlyStopping(
             monitor='val_loss',
@@ -63,11 +59,10 @@ for rnn_units, dense_units, dropout in param_combinations:
             epochs=EPOCHS,
             batch_size=BATCH_SIZE,
             validation_split=0.15,
-            class_weight=class_weights,
             callbacks=[early_stopping],
             verbose=0
         )
-        
+
         y_pred = np.argmax(model.predict(X_test), axis=1)
         report = classification_report(y_test, y_pred, output_dict=True)
         fold_reports.append(report)

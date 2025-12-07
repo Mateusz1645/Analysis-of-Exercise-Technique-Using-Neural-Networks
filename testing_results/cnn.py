@@ -1,17 +1,17 @@
 import numpy as np
 import pandas as pd
 from itertools import product
-from concurrent.futures import ProcessPoolExecutor
-from sklearn.model_selection import StratifiedKFold
-from sklearn.metrics import classification_report
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Masking, Dropout, LSTM
-from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.callbacks import EarlyStopping
-from utils import load_data, preprocess_data
-from config import EPOCHS, BATCH_SIZE
 import warnings
 from sklearn.exceptions import UndefinedMetricWarning
+from sklearn.model_selection import StratifiedKFold
+from sklearn.metrics import classification_report
+from tensorflow.keras.callbacks import EarlyStopping
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Masking, Dropout, Conv1D, Flatten, MaxPooling1D
+from tensorflow.keras.optimizers import Adam
+from utils import load_data, preprocess_data, split_data
+from config import EPOCHS, BATCH_SIZE
+from concurrent.futures import ProcessPoolExecutor
 
 warnings.filterwarnings("ignore", category=UndefinedMetricWarning)
 
@@ -20,16 +20,18 @@ X, y = preprocess_data(df)
 input_shape = (X.shape[1], X.shape[2])
 num_classes = len(np.unique(y))
 
-lstm_units_list = [64, 128, 256]
+cnn_units_list = [32, 64, 128, 256]
+kernel_size_list = [3, 5]
 dense_units_list = [64, 128, 256]
 dropout_list = [0.1]
 K = 5
 
-def build_model(lstm_units, dense_units, dropout):
+def build_model(cnn_units, kernel_size_units, dense_units, dropout):
     model = Sequential()
     model.add(Masking(mask_value=0.0, input_shape=input_shape))
-    model.add(LSTM(lstm_units, return_sequences=False))
-    model.add(Dropout(dropout))
+    model.add(Conv1D(filters=cnn_units, kernel_size=kernel_size_units, activation='relu'))
+    model.add(MaxPooling1D(pool_size=2))
+    model.add(Flatten())
     model.add(Dense(dense_units, activation='relu'))
     model.add(Dropout(dropout))
     model.add(Dense(num_classes, activation='softmax'))
@@ -37,7 +39,7 @@ def build_model(lstm_units, dense_units, dropout):
     return model
 
 def evaluate_combination(params):
-    lstm_units, dense_units, dropout = params
+    cnn_units, kernel_size_units, dense_units, dropout = params
     kf = StratifiedKFold(n_splits=K, shuffle=True, random_state=42)
     fold_reports = []
 
@@ -45,19 +47,28 @@ def evaluate_combination(params):
         X_train, X_test = X[train_idx], X[test_idx]
         y_train, y_test = y[train_idx], y[test_idx]
 
-        model = build_model(lstm_units, dense_units, dropout)
-        early_stopping = EarlyStopping(monitor='val_loss', patience=10, restore_best_weights=True)
-
-        model.fit(X_train, y_train, validation_split=0.15,
-                  epochs=EPOCHS, batch_size=BATCH_SIZE,
-                  callbacks=[early_stopping], verbose=0)
+        early_stopping = EarlyStopping(
+            monitor='val_loss',
+            patience=10,
+            restore_best_weights=True
+        )
+        model = build_model(cnn_units, kernel_size_units, dense_units, dropout)
+        model.fit(
+            X_train, y_train,
+            epochs=EPOCHS,
+            batch_size=BATCH_SIZE,
+            validation_split=0.15,
+            callbacks=[early_stopping],
+            verbose=0
+        )
 
         y_pred = np.argmax(model.predict(X_test, verbose=0), axis=1)
         report = classification_report(y_test, y_pred, output_dict=True)
         fold_reports.append(report)
 
     return {
-        "lstm_units": lstm_units,
+        "cnn_units": cnn_units,
+        "kernel_size": kernel_size_units,
         "dense_units": dense_units,
         "dropout": dropout,
         "accuracy_mean": np.mean([r["accuracy"] for r in fold_reports]),
@@ -68,14 +79,12 @@ def evaluate_combination(params):
     }
 
 if __name__ == "__main__":
-    param_combinations = list(product(lstm_units_list, dense_units_list, dropout_list))
-    
-    results = []
+    param_combinations = list(product(cnn_units_list, kernel_size_list, dense_units_list, dropout_list))
+
     with ProcessPoolExecutor() as executor:
-        for res in executor.map(evaluate_combination, param_combinations):
-            results.append(res)
+        results = list(executor.map(evaluate_combination, param_combinations))
 
     df_results = pd.DataFrame(results).sort_values(by="macro_f1_mean", ascending=False)
-    df_results.to_csv("lstm_results.csv", index=False)
+    df_results.to_csv("cnn_result.csv", index=False)
     print(df_results)
 
