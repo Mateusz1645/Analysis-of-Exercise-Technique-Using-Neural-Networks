@@ -3,7 +3,12 @@ import mediapipe as mp
 import os
 
 mp_pose = mp.solutions.pose
-pose = mp_pose.Pose(static_image_mode=False, min_detection_confidence=0.5)
+pose = mp_pose.Pose(
+    static_image_mode=False,
+    model_complexity=2,        
+    min_detection_confidence=0.5,
+    min_tracking_confidence=0.5
+)
 
 LANDMARKS_INFO = {
     0: "nose",
@@ -15,6 +20,16 @@ LANDMARKS_INFO = {
     27: "left_ankle", 28: "right_ankle"
 }
 SELECTED_LANDMARKS = list(LANDMARKS_INFO.keys())
+# SELECTED_LANDMARKS = [0, 11, 13, 15, 23, 25, 27]
+
+
+# CUSTOM_CONNECTIONS = [
+#     (11, 13), (13, 15),  # ramię
+#     (11, 23),           # bark → biodro
+#     (23, 25), (25, 27)  # noga (opcjonalnie)
+# ]
+
+
 
 CUSTOM_CONNECTIONS = [
     (0, 11), (0, 12),         # głowa do barków
@@ -28,9 +43,9 @@ CUSTOM_CONNECTIONS = [
 ]
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
-input_video_path = os.path.join(script_dir, "20250628_155721.mp4")
+input_video_path = os.path.join(script_dir, "20250719_194118.mp4")
 print(input_video_path)
-output_video_path = os.path.join(script_dir, "output.mp4")
+output_video_path = os.path.join(script_dir, "output_3.mp4")
 
 cap = cv2.VideoCapture(input_video_path)
 if not cap.isOpened():
