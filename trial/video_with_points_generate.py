@@ -70,13 +70,11 @@ while cap.isOpened():
     if results.pose_landmarks:
         landmarks = results.pose_landmarks.landmark
 
-        # Rysowanie punktów
         for idx in SELECTED_LANDMARKS:
             lm = landmarks[idx]
             cx, cy = int(lm.x * width), int(lm.y * height)
             cv2.circle(frame, (cx, cy), 5, (0, 255, 0), -1)
 
-        # Rysowanie połączeń
         for start_idx, end_idx in CUSTOM_CONNECTIONS:
             lm_start = landmarks[start_idx]
             lm_end = landmarks[end_idx]

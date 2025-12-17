@@ -3,11 +3,9 @@ import mediapipe as mp
 import os
 import math
 
-# --- Ustawienia Mediapipe ---
 mp_pose = mp.solutions.pose
 pose = mp_pose.Pose(static_image_mode=False, min_detection_confidence=0.5)
 
-# --- Landmarki ---
 LANDMARKS_INFO = {
     0: "nose",
     11: "left_shoulder", 12: "right_shoulder",
@@ -30,7 +28,6 @@ CUSTOM_CONNECTIONS = [
     (24, 26), (26, 28)        # prawa noga
 ]
 
-# --- Funkcja do rysowania łuku kąta ---
 def draw_angle_arc(frame, vertex, point1, point2, radius=40, color=(0,0,255), label='α'):
     """
     Rysuje łuk przy wierzchołku vertex między point1 a point2.
@@ -52,16 +49,13 @@ def draw_angle_arc(frame, vertex, point1, point2, radius=40, color=(0,0,255), la
     det = v1[0]*v2[1] - v1[1]*v2[0]
     angle_deg = int(math.degrees(math.atan2(abs(det), dot)))
 
-    # Rysowanie wartości kąta jako label
     cv2.putText(frame, f"{angle_deg} st.", (vertex[0]+radius//2, vertex[1]-radius//2),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
 
-# --- Ścieżki plików ---
 script_dir = os.path.dirname(os.path.abspath(__file__))
 input_video_path = os.path.join(script_dir, "20250628_155721.mp4")
 output_video_path = os.path.join(script_dir, "output_katy.mp4")
 
-# --- Wczytanie wideo ---
 cap = cv2.VideoCapture(input_video_path)
 if not cap.isOpened():
     print("Nie udało się otworzyć pliku wideo!")
@@ -73,26 +67,22 @@ height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 out = cv2.VideoWriter(output_video_path, fourcc, fps, (width, height))
 
-# --- Przetwarzanie klatek ---
 while cap.isOpened():
     ret, frame = cap.read()
     if not ret:
         break
-    
-    # frame = cv2.flip(frame, 0)  # jeśli potrzebujesz obrócić w pionie
+
     image_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     results = pose.process(image_rgb)
 
     if results.pose_landmarks:
         landmarks = results.pose_landmarks.landmark
 
-        # --- Rysowanie punktów ---
         for idx in SELECTED_LANDMARKS:
             lm = landmarks[idx]
             cx, cy = int(lm.x * width), int(lm.y * height)
             cv2.circle(frame, (cx, cy), 5, (0, 255, 0), -1)
 
-        # --- Rysowanie połączeń ---
         for start_idx, end_idx in CUSTOM_CONNECTIONS:
             lm_start = landmarks[start_idx]
             lm_end = landmarks[end_idx]
@@ -102,36 +92,27 @@ while cap.isOpened():
 
             cv2.line(frame, (x1, y1), (x2, y2), (255, 0, 0), 2)
 
-        # --- Rysowanie kątów ---
-        # Lewa ręka
+
         left_shoulder = (int(landmarks[11].x * width), int(landmarks[11].y * height))
         left_elbow = (int(landmarks[13].x * width), int(landmarks[13].y * height))
         left_wrist = (int(landmarks[15].x * width), int(landmarks[15].y * height))
         left_hip = (int(landmarks[23].x * width), int(landmarks[23].y * height))
 
-        # Kąt w łokciu: między barkiem a nadgarstkiem
         draw_angle_arc(frame, left_elbow, left_shoulder, left_wrist, radius=40, color=(0,0,255), label='α')
 
-        # Kąt w barku: między łokciem a biodrem
         draw_angle_arc(frame, left_shoulder, left_elbow, left_hip, radius=50, color=(0,255,0), label='β')
 
-
-        # Prawa ręka
         right_shoulder = (int(landmarks[12].x * width), int(landmarks[12].y * height))
         right_elbow = (int(landmarks[14].x * width), int(landmarks[14].y * height))
         right_wrist = (int(landmarks[16].x * width), int(landmarks[16].y * height))
         right_hip = (int(landmarks[24].x * width), int(landmarks[24].y * height))
 
-        # Kąt w łokciu
         draw_angle_arc(frame, right_elbow, right_shoulder, right_wrist, radius=40, color=(0,0,255), label='')
 
-        # Kąt w barku: między łokciem a biodrem
         draw_angle_arc(frame, right_shoulder, right_elbow, right_hip, radius=50, color=(0,255,0), label='Kat Łokcia')
 
-    # --- Zapis klatki ---
     out.write(frame)
 
-# --- Zwolnienie zasobów ---
 cap.release()
 out.release()
 pose.close()

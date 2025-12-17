@@ -5,12 +5,10 @@ from tqdm import tqdm
 
 
 
-# === Parametry wideo ===
 frame_width = 1080
 frame_height = 1920
 fps = 30
 
-# === Lista punktów i połączeń ===
 LANDMARKS_NAMES = {
     "left_shoulder": 11,
     "right_shoulder": 12,
@@ -26,10 +24,8 @@ LANDMARKS_NAMES = {
     "right_ankle": 28
 }
 
-# Odwrócona mapa ID → nazwa
 ID_TO_NAME = {v: k for k, v in LANDMARKS_NAMES.items()}
 
-# Połączenia (linia między parami punktów)
 CUSTOM_CONNECTIONS = [
     (11, 12),
     (23, 24),
@@ -40,24 +36,16 @@ CUSTOM_CONNECTIONS = [
     (24, 26), (26, 28)
 ]
 
-# === Wczytaj dane z CSV ===
 df = pd.read_csv(csv_path)
 
-# === Przygotuj VideoWriter ===
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 out = cv2.VideoWriter(output_video_path, fourcc, fps, (frame_width, frame_height))
 
-# === Lista unikalnych klatek do przetworzenia ===
-frames = sorted(df['frame'].unique())
-
-# === Przetwarzanie klatek ===
 for frame_num in tqdm(frames, desc="Generowanie wideo"):
     frame_data = df[df['frame'] == frame_num].iloc[0]
 
-    # Puste czarne tło
     img = np.zeros((frame_height, frame_width, 3), dtype=np.uint8)
 
-    # Wyodrębnij punkty
     points = {}
     for name, idx in LANDMARKS_NAMES.items():
         x_col = f'{name}_x'
@@ -69,12 +57,10 @@ for frame_num in tqdm(frames, desc="Generowanie wideo"):
         x = int(frame_data[x_col])
         y = int(frame_data[y_col])
 
-        # Bezpieczne rysowanie tylko jeśli w granicach
         if 0 <= x < frame_width and 0 <= y < frame_height:
             points[idx] = (x, y)
             cv2.circle(img, (x, y), 7, (0, 255, 0), -1)
 
-    # Rysowanie połączeń
     for start_idx, end_idx in CUSTOM_CONNECTIONS:
         if start_idx in points and end_idx in points:
             cv2.line(img, points[start_idx], points[end_idx], (255, 0, 0), 3)
@@ -84,6 +70,5 @@ for frame_num in tqdm(frames, desc="Generowanie wideo"):
     img = cv2.flip(img, 0)
     out.write(img)
 
-# === Zakończenie ===
 out.release()
-print(f"✅ Wideo z punktami zapisane pod: {output_video_path}")
+print(f"Wideo z punktami zapisane pod: {output_video_path}")
