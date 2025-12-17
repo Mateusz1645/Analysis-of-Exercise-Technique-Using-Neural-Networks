@@ -20,3 +20,6 @@ probne/20251023_205133.mp4
 probne/output_3.mp4
 probne/output_2.mp4
 probne/output_1.mp4
+data_processing/frames_count.py
+data_processing/generate_histograms.py
+/histograms
