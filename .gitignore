@@ -14,3 +14,4 @@ data_processing/generate_histograms.py
 /histograms
 data_processing/gerenrate_histograms_for_labels.py
 *.mp4
+data_processing/generate_histograms_knee_angle.py
