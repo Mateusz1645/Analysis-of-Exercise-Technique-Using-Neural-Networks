@@ -3,6 +3,7 @@ from glob import glob
 from concurrent.futures import ProcessPoolExecutor
 import pandas as pd
 import numpy as np
+from sklearn.preprocessing import MinMaxScaler
 
 from config import BASE_DIR, OUTPUT_CSV, LANDMARKS_INFO, RANDOM_ADD
 from video_processing import process_single_video
@@ -67,6 +68,12 @@ def save_to_csv(all_rows, output_csv):
         cosine_angle = np.dot(ba, bc) / (np.linalg.norm(ba) * np.linalg.norm(bc))
         angle = np.arccos(np.clip(cosine_angle, -1.0, 1.0))
         return np.degrees(angle)
+    
+    def calculate_distance(a, b):
+        a = np.array(a)
+        b = np.array(b)
+        return np.linalg.norm(a - b)
+
     # Function to calculate joint angles for a single row
     def calculate_angles(row):
         angles = {}
@@ -114,11 +121,28 @@ def save_to_csv(all_rows, output_csv):
             [row['right_knee_x'], row['right_knee_y']],
             [row['right_ankle_x'], row['right_ankle_y']]
         )
+
+        angles['left_knee_ankle_dist'] = calculate_distance(
+            [row['left_knee_x'], row['left_knee_y']],
+            [row['left_ankle_x'], row['left_ankle_y']]
+        )
+
+        angles['right_knee_ankle_dist'] = calculate_distance(
+            [row['right_knee_x'], row['right_knee_y']],
+            [row['right_ankle_x'], row['right_ankle_y']]
+        )
+
         return pd.Series(angles)
     
     # Add joint angle columns to the DataFrame
     angles_df = df.apply(calculate_angles, axis=1)
     df = pd.concat([df, angles_df], axis=1)
+
+    # SCALE ONLY KNEE-ANKLE DISTANCES TO [0, 1]
+    dist_cols = ['left_knee_ankle_dist', 'right_knee_ankle_dist']
+
+    scaler = MinMaxScaler()
+    df[dist_cols] = scaler.fit_transform(df[dist_cols])
     
     # Save the final DataFrame to CSV
     df.to_csv(output_csv, index=False)

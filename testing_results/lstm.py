@@ -20,7 +20,7 @@ X, y = preprocess_data(df)
 input_shape = (X.shape[1], X.shape[2])
 num_classes = len(np.unique(y))
 
-lstm_units_list = [64, 128, 256]
+lstm_units_list = [256]
 dense_units_list = [64, 128, 256]
 dropout_list = [0.1]
 K = 5

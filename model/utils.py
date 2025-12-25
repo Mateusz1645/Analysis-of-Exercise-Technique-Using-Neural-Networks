@@ -31,9 +31,12 @@ def preprocess_data(df, target_candidates=("target","label","class"), sequence_l
     if target_col is None:
         raise KeyError(f"No target column found. Available columns: {list(df.columns)}")
     
-    # Select only columns with angles
+    # Select angle + knee-ankle distance features
     angle_cols = [col for col in df.columns if col.endswith('_angle')]
-    features_df = df[angle_cols].copy()
+    dist_cols = [col for col in df.columns if col.endswith('_knee_ankle_dist')]
+
+    feature_cols = angle_cols + dist_cols
+    features_df = df[feature_cols].copy()
 
     # Group frames by video
     X_list, y_list = [], []
